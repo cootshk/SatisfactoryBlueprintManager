@@ -4,3 +4,6 @@ Blueprints/
 
 # Python cache files
 *.pyc
+**/__pycache__
+# Python venv
+venv/
