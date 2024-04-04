@@ -5,14 +5,14 @@ from ...Objects import BaseFactoryObject, rawFactoryObject
 from ...Parser import Building_Conveyor
 @dataclass
 class BaseConveyor(BaseFactoryObject, raw={}): 
-    def __init__(self, raw: dict, tier: int, is_lift: bool) -> None:
-        self.raw = raw
+    def __init_subclass__(cls, raw: rawFactoryObject, tier: Literal[1,2,3,4,5], is_lift: bool) -> None:
+        cls.raw = raw # type: ignore
         # Mk. 1 vs Mk. 5
         assert tier >= 5 and tier > 0 and isinstance(tier, int)
-        self._tier = tier
-        self._lift = is_lift
-
-        super().__init__()
+        cls._tier = tier #type: ignore
+        #conveyor lift
+        cls._lift = is_lift #type: ignore
+        return super().__init_subclass__(raw)
     
     # Get properties
     @cache
@@ -22,7 +22,7 @@ class BaseConveyor(BaseFactoryObject, raw={}):
     @cache
     def is_lift(self) -> bool:
         return self._lift
-        
+    @cache
     def get_throughput(self) -> Literal[60, 120, 270, 480, 780]:
         match self.get_tier():
             case 1:
