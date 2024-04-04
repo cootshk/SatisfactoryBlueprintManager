@@ -2,6 +2,7 @@
 
 from io import BytesIO
 import struct, itertools
+from typing import Any
 import zlib
 
 def pako_inflate(data):
@@ -17,35 +18,46 @@ class Building_Conveyor:
         return Building_Conveyor.isConveyorBelt(obj) or Building_Conveyor.isConveyorLift(obj)
 
     @staticmethod
-    def isConveyorBelt(currentObject) -> bool:
-        if currentObject['className'] in Building_Conveyor.availableConveyorBelts:
-            return True
+    def isConveyorBelt(currentObject: dict[str, str] | dict[str, dict[str, str]]) -> bool:
+        try:
+            assert isinstance(currentObject['className'], str)
+            if currentObject['className'] in Building_Conveyor.availableConveyorBelts:
+                return True
         
         # Belts Mod
-        if (currentObject['className'].startsWith('/Conveyors_Mod/Build_BeltMk')
-             or currentObject['className'].startsWith('/Game/Conveyors_Mod/Build_BeltMk')
-             or currentObject['className'].startsWith('/UltraFastLogistics/Buildable/build_conveyorbeltMK')
-             or currentObject['className'].startsWith('/FlexSplines/Conveyor/Build_Belt')
-             or currentObject['className'].startsWith('/conveyorbeltmod/Belt/mk')
-             or currentObject['className'].startsWith('/minerplus/content/buildable/Factory/belt_')
-             or currentObject['className'].startsWith('/bamfp/content/buildable/Factory/belt_')):
-            return True
-
-        return False
+            if (currentObject['className'].startswith('/Conveyors_Mod/Build_BeltMk')
+                 or currentObject['className'].startswith('/Game/Conveyors_Mod/Build_BeltMk')
+                 or currentObject['className'].startswith('/UltraFastLogistics/Buildable/build_conveyorbeltMK')
+                 or currentObject['className'].startswith('/FlexSplines/Conveyor/Build_Belt')
+                 or currentObject['className'].startswith('/conveyorbeltmod/Belt/mk')
+                 or currentObject['className'].startswith('/minerplus/content/buildable/Factory/belt_')
+                 or currentObject['className'].startswith('/bamfp/content/buildable/Factory/belt_')):
+                return True
+    
+            return False
+        except KeyError:
+            assert isinstance(currentObject, dict)
+            return Building_Conveyor.isConveyorBelt(list(currentObject.values())[0]) # type: ignore
     
     @staticmethod
-    def isConveyorLift(currentObject) -> bool:
+    def isConveyorLift(currentObject: dict[str, str] | dict[str, dict[str, str]]) -> bool:
+        try:
+            assert isinstance(currentObject['className'], str)
+        except KeyError:
+            assert isinstance(currentObject, dict)
+            return Building_Conveyor.isConveyorLift(list(currentObject.values())[0]) # type: ignore
+        
         if currentObject['className'] in Building_Conveyor.availableConveyorLifts:
             return True
         
         # Lifts Mod
-        if (currentObject['className'].startsWith('/minerplus/content/buildable/Factory/lift')
-             or currentObject['className'].startsWith('/bamfp/content/buildable/Factory/lift')
-             or currentObject['className'].startsWith('/Game/Conveyors_Mod/Build_LiftMk')
-             or currentObject['className'].startsWith('/Conveyors_Mod/Build_LiftMk')
-             or currentObject['className'].startsWith('/Game/CoveredConveyor')
-             or currentObject['className'].startsWith('/CoveredConveyor')
-             or currentObject['className'].startsWith('/conveyorbeltmod/lift/')):
+        if (currentObject['className'].startswith('/minerplus/content/buildable/Factory/lift')
+             or currentObject['className'].startswith('/bamfp/content/buildable/Factory/lift')
+             or currentObject['className'].startswith('/Game/Conveyors_Mod/Build_LiftMk')
+             or currentObject['className'].startswith('/Conveyors_Mod/Build_LiftMk')
+             or currentObject['className'].startswith('/Game/CoveredConveyor')
+             or currentObject['className'].startswith('/CoveredConveyor')
+             or currentObject['className'].startswith('/conveyorbeltmod/lift/')):
             return True
 
         return False
@@ -610,10 +622,9 @@ class BlueprintParser(Parser):
 
 
 
-
-
 if __name__ == '__main__':
     import argparse
+    import os
     parser = argparse.ArgumentParser(
         prog="Satisfactory Blueprint Info",
         description="Gets information about a satisfactory blueprint"
@@ -628,10 +639,9 @@ if __name__ == '__main__':
         print(p.objects)
     else:
         # GUI
-        import os
+        
         import tkinter as tk
         from tkinter.filedialog import askopenfilename
-
         window = tk.Tk()
         window.wm_title("SBM v1.0")
         greeting = tk.Label(text="Satisfactory Blueprint Manager")
@@ -656,6 +666,25 @@ if __name__ == '__main__':
         ) 
         assert os.path.isfile(filename)
 
-        p = BlueprintParser(filename)
+        p = BlueprintParser(Worker(), Options(filename, lang="en_us"))
+        # Generate window to show blueprint contents
+        #print(f"Blueprint data: \n{p.objects}")
+        
+        # Object Totals
+        conveyors = 0
+        foundations = 0
+        refiners = 0
+        walls = 0
+        storage = 0
+        signs = 0
+        extractors = 0
+
+        for k,v in zip(p.objects.keys(), p.objects.values()):
+            print({k: v})
+            print()
+            if Building_Conveyor.isConveyor({k:v}):
+                conveyors += 1
+
+        # Run window
         window.mainloop()
     
