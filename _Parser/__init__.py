@@ -1,6 +1,9 @@
+"""The parser logic. None of this should be visible to the user"""
 # Thanks to @heinrich26 for the parser!
 
+from email import errors
 from io import BytesIO
+from os import PathLike
 import struct, itertools
 from typing import Any
 import zlib
@@ -86,6 +89,7 @@ class DataView:
         bytes_per_element is the size of each element in bytes.
         By default we are assume the array is one byte per element.
         """
+        self.size = size
         self.buf = buf if isinstance(buf, BytesIO) else BytesIO(buf)
         self.bytes_per_element = bytes_per_element # unused
 
@@ -114,33 +118,51 @@ class DataView:
         return struct.unpack('<f', self.buf.read(8))[0]
 
 class Worker:
+    """A class that does nothing. Exists for the sake of copy-paste.
+    """
     def __init__(self) -> None:
         pass
 
-    def postMessage(self, d: dict):
+    def post_message(self, d: dict):
+        """DEBUG - print a dictionary
+
+        Args:
+            d (dict): The dictionary to print
+        """
         print(d)
 
 
 class Options:
-    def __init__(self, fname='save.sav', lang='de_de') -> None:
-        self.arrayBuffer = bytearray(open(fname, mode='rb').read())
+    """Parser Options
+    
+    Arguments:
+        fname (Path or str): the blueprint file to open
+        lang (str, optional): The language to open the blueprint file in. Defaults to en_us.
+    """
+    def __init__(self, fname: PathLike|str='save.sav', lang='en_us') -> None:
+        self.array_buffer = bytearray(open(fname, mode='rb').read())
         self.language = lang
 
 
 class Parser:
+    """Parser - The main parser"""
     currentChunks: list
 
     def __init__(self, worker: Worker, options: Options) -> None:
         self.worker = worker
         self.objects = dict()
+        # Non __init__ options:
+        self.PACKAGE_FILE_TAG = 0
+        self.last_str_read = 0
 
         self.language = options.language
 
-        self.arrayBuffer = options.arrayBuffer
-        self.maxByte = len(self.arrayBuffer)
-        # Still used for header try not to shrink it too much as modMetadata can be longer than anticipated...
-        self.bufferView = DataView(BytesIO(self.arrayBuffer))
-        # self.currentByte = 0
+        self.array_buffer = options.array_buffer
+        self.max_byte = len(self.array_buffer)
+        # Still used for header try not to shrink it too much,
+        # as modMetadata can be longer than anticipated...
+        self.buffer_view = DataView(BytesIO(self.array_buffer))
+        # self.current_byte = 0
 
         self.parse()
 
@@ -148,97 +170,102 @@ class Parser:
         pass
 
     @property
-    def currentByte(self):
-        return self.bufferView.buf.tell()
+    def current_byte(self):
+        """Gets the current byte"""
+        return self.buffer_view.buf.tell()
 
-    @currentByte.setter
-    def currentByte(self, new_pos):
-        self.bufferView.buf.seek(new_pos, 0)
+    @current_byte.setter
+    def current_byte(self, new_pos):
+        self.buffer_view.buf.seek(new_pos, 0)
 
-    def skip_bytes(self, byteLength: int = 1):
-        self.bufferView.buf.seek(byteLength, 1)
-        # self.currentByte += byteLength
+    def skip_bytes(self, byte_length: int = 1):
+        """Skip over bytes"""
+        self.buffer_view.buf.seek(byte_length, 1)
+        # self.current_byte += byte_length
 
     def read_byte(self) -> int:
         """
-        TODO super useless method???
+        TO DO super useless method???
         """
-        return int(self.bufferView.get_uint_8())
+        return int(self.buffer_view.get_uint_8())
 
     def read_hex(self, hexLength) -> str:
-        return ''.join(chr(self.bufferView.get_uint_8()) for _ in range(hexLength))
+        return ''.join(chr(self.buffer_view.get_uint_8()) for _ in range(hexLength))
 
     def read_int(self) -> int:
-        # self.currentByte += 4
-        return self.bufferView.get_int_32()
+        # self.current_byte += 4
+        return self.buffer_view.get_int_32()
 
     def read_int_8(self) -> int:
-        # self.currentByte += 1
-        return self.bufferView.get_int_8()
+        # self.current_byte += 1
+        return self.buffer_view.get_int_8()
 
     def read_long(self) -> int:
-        return self.bufferView.get_long()
+        return self.buffer_view.get_long()
 
     def read_float(self) -> float:
-        # self.currentByte += 4
-        return self.bufferView.get_float_32()
+        # self.current_byte += 4
+        return self.buffer_view.get_float_32()
 
     def read_double(self) -> float:
-        # self.currentByte += 8
-        return self.bufferView.get_float_64()
+        # self.current_byte += 8
+        return self.buffer_view.get_float_64()
 
     def read_string(self) -> str:
-        strLength = self.read_int()
-        self.lastStrRead = strLength
-        startBytes = self.currentByte
+        str_length = self.read_int()
+        self.last_str_read = str_length
+        startBytes = self.current_byte
 
-        if strLength == 0:
+        if str_length == 0:
             return ''
 
         # Range error!
-        if strLength > (self.maxByte - self.currentByte):
-            debugSize = 512
-            self.currentByte = max(0, startBytes - (debugSize * 2))
-            errorMessage = f"Cannot readString ({strLength}): {self.read_hex(debugSize * 2)}========={self.read_hex(debugSize)}"
-            print(errorMessage)
-            self.worker.postMessage({'command': 'alertParsing'})
-            raise Exception(errorMessage)
+        if str_length > (self.max_byte - self.current_byte):
+            debug_size = 512
+            self.current_byte = max(0, startBytes - (debug_size * 2))
+            error_message = (f"Cannot readString ({str_length}):" +
+                             f" {self.read_hex(debug_size * 2)}========={self.read_hex(debug_size)}")
+
+            print(error_message)
+            self.worker.post_message({'command': 'alertParsing'})
+            raise ValueError(error_message)
 
         # UTF16
-        if (strLength < 0):
-            strLength = -strLength - 1
-            s = ''.join(chr(self.bufferView.get_uint_16())
-                        for _ in range(strLength))
+        if str_length < 0:
+            str_length = -str_length - 1
+            s = ''.join(chr(self.buffer_view.get_uint_16())
+                        for _ in range(str_length))
             self.skip_bytes(2)
             return s
 
         try:
-            strLength = strLength - 1
-            s = ''.join(chr(self.bufferView.get_uint_8())
-                        for _ in range(strLength))
+            str_length = str_length - 1
+            s = ''.join(chr(self.buffer_view.get_uint_8())
+                        for _ in range(str_length))
             self.skip_bytes(1)
             return s
         except Exception as error:
-            debugSize = 512
-            self.currentByte = max(0, startBytes - (debugSize * 2))
-            errorMessage = f"Cannot readString ({strLength}): {self.read_hex(debugSize * 2)}========={self.read_hex(debugSize)}"
+            debug_size = 512
+            self.current_byte = max(0, startBytes - (debug_size * 2))
+            error_message = (f"Cannot readString ({str_length}): " +
+                             f"{self.read_hex(debug_size * 2)}========={self.read_hex(debug_size)}")
             print(error)
-            self.worker.postMessage({'command': 'alertParsing'})
-            raise Exception(errorMessage)
+            self.worker.post_message({'command': 'alertParsing'})
+            raise ValueError(error_message) from error
 
     def readObject(self) -> dict:
         """
         Main objects
         """
-        object = dict()
-        object['className'] = self.read_string()
-        object = self.readObjectProperty(object)
-        object['outerPathName'] = self.read_string()
+        obj = dict()
+        obj['className'] = self.read_string()
+        obj = self.read_object_property(obj)
+        obj['outerPathName'] = self.read_string()
 
-        return object
+        return obj
     
     def readActor(self):
-        actor = self.readObjectProperty({'className': self.read_string()})
+        actor = self.read_object_property({'className': self.read_string()})
         if (needTransform := self.read_int()) != 0:
             actor['needTransform'] = needTransform # type: ignore
 
@@ -260,34 +287,34 @@ class Parser:
         if (scale3d := [self.read_float() for _ in range(3)]) != [1.0, 1.0, 1.0]:
             actor['transform']['scale3d'] = scale3d
         
-        if (wasPlacedInLevel := self.read_int()) != 0: # TODO: Switch to 1?
+        if (wasPlacedInLevel := self.read_int()) != 0: # TO DO: Switch to 1?
             actor['wasPlacedInLevel'] = wasPlacedInLevel # type: ignore
 
         return actor
 
     def readEntity(self, objectKey):
         entityLength = self.read_int()
-        startByte = self.currentByte
+        startByte = self.current_byte
 
         if not 'outerPathName' in self.objects[objectKey]:
-            self.objects[objectKey]['entity'] = self.readObjectProperty(dict())
+            self.objects[objectKey]['entity'] = self.read_object_property(dict())
 
             if (countChild := self.read_int()) > 0:
-                self.objects[objectKey]['children'] = [self.readObjectProperty(dict()) for _ in countChild] # type: ignore
+                self.objects[objectKey]['children'] = [self.read_object_property(dict()) for _ in countChild] # type: ignore
             
-        if (self.currentByte - startByte) == entityLength:
+        if (self.current_byte - startByte) == entityLength:
             self.objects[objectKey]['shouldBeNulled'] = True
             return
         
         # Read properties
         self.objects[objectKey]['properties'] = []
         while True:
-            property = self.readProperty(self.objects[objectKey]['className'], objectKey) # type: ignore
-            if property is None:
+            read_property = self.readProperty(self.objects[objectKey]['className'], objectKey) # type: ignore
+            if read_property is None:
                 break
 
-            if property['name'] != 'CachedActorTransform': # Should be removed on release
-                self.objects[objectKey]['properties'].append(property)
+            if read_property['name'] != 'CachedActorTransform': # Should be removed on release
+                self.objects[objectKey]['properties'].append(read_property)
 
         # Read Conveyor missing bytes
         if Building_Conveyor.isConveyor(self.objects[objectKey]):
@@ -310,13 +337,13 @@ class Parser:
                 case '/Game/FactoryGame/-Shared/Blueprint/BP_GameState.BP_GameState_C', '/Game/FactoryGame/-Shared/Blueprint/BP_GameMode.BP_GameMode_C':
                     self.objects[objectKey]['extra'] = { 'count': self.read_int(), 'game': [] }
                     gameLength = self.read_int()
-                    self.objects[objectKey]['extra']['game'] = [self.readObjectProperty(dict()) for _ in range(gameLength)]
+                    self.objects[objectKey]['extra']['game'] = [self.read_object_property(dict()) for _ in range(gameLength)]
                 # in Blueprints, there are no Players!
                 # case '/Game/FactoryGame/Character/Player/BP_PlayerState.BP_PlayerState_C':
                 #    pass
-                # TODO: Not 0 here so bypass those special cases, but why? We mainly do not want to get warned here...
+                # TO DO: Not 0 here so bypass those special cases, but why? We mainly do not want to get warned here...
                 case '/Game/FactoryGame/Buildable/Factory/DroneStation/BP_DroneTransport.BP_DroneTransport_C':
-                    missingDrone = (startByte + entityLength) - self.currentByte
+                    missingDrone = (startByte + entityLength) - self.current_byte
                     self.objects[objectKey]['missing'] = self.read_hex(missingDrone)
                 case '/Game/FactoryGame/-Shared/Blueprint/BP_CircuitSubsystem.BP_CircuitSubsystem_C':
                     self.objects[objectKey]['extra'] = { 'count': self.read_int(), 'circuits': [] }
@@ -330,8 +357,8 @@ class Parser:
                 case '/Game/FactoryGame/Buildable/Factory/PowerLine/Build_PowerLine.Build_PowerLine_C', '/Game/FactoryGame/Events/Christmas/Buildings/PowerLineLights/Build_XmassLightsLine.Build_XmassLightsLine_C', '/FlexSplines/PowerLine/Build_FlexPowerline.Build_FlexPowerline_C', '/AB_CableMod/Visuals1/Build_AB-PLCopper.Build_AB-PLCopper_C', '/AB_CableMod/Visuals1/Build_AB-PLCaterium.Build_AB-PLCaterium_C', '/AB_CableMod/Visuals3/Build_AB-PLHeavy.Build_AB-PLHeavy_C', '/AB_CableMod/Visuals4/Build_AB-SPLight.Build_AB-SPLight_C', '/AB_CableMod/Visuals3/Build_AB-PLPaintable.Build_AB-PLPaintable_C':
                     self.objects[objectKey]['extra'] = {
                         'count': self.read_int(),
-                        'source': self.readObjectProperty(dict()),
-                        'target': self.readObjectProperty(dict())
+                        'source': self.read_object_property(dict()),
+                        'target': self.read_object_property(dict())
                     }
 
                     # 2022-10-18: Added Cached locations for wire locations for use in visualization in blueprint hologram (can't depend on connection components)
@@ -346,8 +373,8 @@ class Parser:
                             'unk': self.read_hex(53)
                         } for _ in range(trainLength)]
 
-                    self.objects[objectKey]['extra']['previous'] = self.readObjectProperty(dict())
-                    self.objects[objectKey]['extra']['next'] = self.readObjectProperty(dict())
+                    self.objects[objectKey]['extra']['previous'] = self.read_object_property(dict())
+                    self.objects[objectKey]['extra']['next'] = self.read_object_property(dict())
                 case '/Game/FactoryGame/Buildable/Vehicle/Tractor/BP_Tractor.BP_Tractor_C', '/Game/FactoryGame/Buildable/Vehicle/Truck/BP_Truck.BP_Truck_C', '/Game/FactoryGame/Buildable/Vehicle/Explorer/BP_Explorer.BP_Explorer_C', '/Game/FactoryGame/Buildable/Vehicle/Cyberwagon/Testa_BP_WB.Testa_BP_WB_C', '/Game/FactoryGame/Buildable/Vehicle/Golfcart/BP_Golfcart.BP_Golfcart_C', '/Game/FactoryGame/Buildable/Vehicle/Golfcart/BP_GolfcartGold.BP_GolfcartGold_C', '/x3_mavegrag/Vehicles/Trucks/TruckMk1/BP_X3Truck_Mk1.BP_X3Truck_Mk1_C':
                     self.objects[objectKey]['extra'] = { 'count': self.read_int(), 'objects': [] }
                     vehicleLength = self.read_int()
@@ -356,17 +383,15 @@ class Parser:
                             'unk': self.read_hex(53)
                         } for _ in range(vehicleLength)]
                 case _:
-                    missingBytes = (startByte + entityLength) - self.currentByte
-                    if missingBytes > 4:
-                        self.objects[objectKey]['missing'] = self.read_hex(missingBytes) # TODO
-                        print(f'MISSING {missingBytes} BYTES', self.objects[objectKey])
+                    missing_bytes = (startByte + entityLength) - self.current_byte
+                    if missing_bytes > 4:
+                        self.objects[objectKey]['missing'] = self.read_hex(missing_bytes) # TO DO
+                        print(f'MISSING {missing_bytes} BYTES', self.objects[objectKey])
                     else:
                         self.skipBytes(4) # type: ignore
 
-    """
-    Reading Properties
-    """
-    def readObjectProperty(self, currentProperty):
+    #Reading Properties
+    def read_object_property(self, currentProperty):
         if (levelName := self.read_string()) != self.header['mapName']: # type: ignore
             currentProperty['levelName'] = levelName
             currentProperty['pathName'] = self.read_string()
@@ -407,14 +432,15 @@ class Parser:
         if hasPrev == 1:
             data.prev = self.readFINNetworkTrace() # type: ignore
 
-        hasStep = self.read_int()
-        if hasStep == 1:
+        has_step = self.read_int()
+        if has_step == 1:
             data['step'] = self.read_string()
 
         return data
 
     # https://github.com/CoderDE/FicsIt-Networks/blob/master/Source/FicsItNetworks/FicsItKernel/Processor/Lua/LuaProcessorStateStorage.cpp#L6
     def readFINLuaProcessorStateStorage(self):
+        """Reads the Lua Processor Storage"""
         data = {'trace': [self.readFINNetworkTrace() for i in range(
             self.read_int())], 'reference': [{
                 'levelName': self.read_string(),
@@ -465,11 +491,12 @@ class Parser:
                     structure['length'] = self.read_int()
                     structure['buffer'] = [self.readFINGPUT1BufferPixel()
                                            for _ in range(structure['size'])]
-                    structure['unk3'] = self.read_hex(45)  # TODO: Not sure at all!
+                    structure['unk3'] = self.read_hex(45)  # TO DO: Not sure at all!
                 case _:
-                    self.worker.postMessage({'command': 'alertParsing'})
+                    self.worker.post_message({'command': 'alertParsing'})
 
-                    raise Exception(f"Unimplemented {structure['unk2']} in readFINLuaProcessorStateStorage")
+                    raise ValueError(
+                        f"Unimplemented {structure['unk2']} in readFINLuaProcessorStateStorage")
 
             return structure
 
@@ -479,8 +506,10 @@ class Parser:
         return data
 
 class BlueprintParser(Parser):
+    """The main class. Parses your blueprints"""
     def __init__(self, worker: Worker, options: Options) -> None:
         super().__init__(worker, options)
+        return
 
     def parse(self):
         self.header = dict()
@@ -508,12 +537,12 @@ class BlueprintParser(Parser):
 
         # We should now unzip the body!
         # Remove the header...
-        print(f"Unzipping... currentByte: {self.currentByte}")
-        self.arrayBuffer = self.arrayBuffer[self.currentByte:]
+        print(f"Unzipping... current_byte: {self.current_byte}")
+        self.array_buffer = self.array_buffer[self.current_byte:]
 
         self.handledByte = 0
-        self.currentByte = 0
-        self.maxByte = len(self.arrayBuffer)
+        self.current_byte = 0
+        self.max_byte = len(self.array_buffer)
 
         self.PACKAGE_FILE_TAG = None
         self.maxChunkSize = None
@@ -526,38 +555,38 @@ class BlueprintParser(Parser):
         """
         Progress bar from 0 to 30%
         """
-        while self.handledByte < self.maxByte:
+        while self.handledByte < self.max_byte:
             # Read chunk info size...
-            chunkHeader = DataView(self.arrayBuffer[0:48])
-            self.currentByte = 48
+            chunk_header = DataView(self.array_buffer[0:48])
+            self.current_byte = 48
             self.handledByte += 48
 
             if self.PACKAGE_FILE_TAG is None:
-                # self.PACKAGE_FILE_TAG = chunkHeader.getBigInt64(0, true)
-                self.PACKAGE_FILE_TAG = chunkHeader.get_uint_32()
-                self.worker.postMessage({ 'command': 'transferData', 'data': { 'PACKAGE_FILE_TAG': self.PACKAGE_FILE_TAG } })
+                # self.PACKAGE_FILE_TAG = chunk_header.getBigInt64(0, true)
+                self.PACKAGE_FILE_TAG = chunk_header.get_uint_32()
+                self.worker.post_message({ 'command': 'transferData', 'data': { 'PACKAGE_FILE_TAG': self.PACKAGE_FILE_TAG } })
             
             if (self.maxChunkSize is None):
-                chunkHeader.buf.seek(8, 0)
-                self.maxChunkSize = chunkHeader.get_uint_32()
-                self.worker.postMessage({ 'command': 'transferData', 'data': { 'maxChunkSize': self.maxChunkSize } })
+                chunk_header.buf.seek(8, 0)
+                self.maxChunkSize = chunk_header.get_uint_32()
+                self.worker.post_message({ 'command': 'transferData', 'data': { 'maxChunkSize': self.maxChunkSize } })
             
-            chunkHeader.buf.seek(16, 0)
-            # TODO Chunk-Size is weird
-            currentChunkSize = chunkHeader.get_uint_32()
+            chunk_header.buf.seek(16, 0)
+            # TO DO Chunk-Size is weird
+            currentChunkSize = chunk_header.get_uint_32()
             print(f"ChunkSize: {currentChunkSize}")
-            if self.arrayBuffer[self.currentByte:self.currentByte + 1] == b'\x00':
-                self.currentByte += 1
+            if self.array_buffer[self.current_byte:self.current_byte + 1] == b'\x00':
+                self.current_byte += 1
                 self.handledByte += 1
-                # TODO bit aligning ???
-            currentChunk = self.arrayBuffer[self.currentByte:
-                                            self.currentByte + currentChunkSize]
+                # TO DO bit aligning ???
+            currentChunk = self.array_buffer[self.current_byte:
+                                            self.current_byte + currentChunkSize]
             self.handledByte += currentChunkSize
-            self.currentByte += currentChunkSize
+            self.current_byte += currentChunkSize
 
             # Free memory from previous chunk...
-            self.arrayBuffer = self.arrayBuffer[self.currentByte:]
-            self.currentByte = 0
+            self.array_buffer = self.array_buffer[self.current_byte:]
+            self.current_byte = 0
 
             # Unzip!
             try:
@@ -566,27 +595,27 @@ class BlueprintParser(Parser):
                 currentInflatedChunk = pako_inflate(currentChunk)
                 self.currentChunks.append(currentInflatedChunk)
             except Exception as error:
-                self.worker.postMessage({ 'command': 'alert', 'message': 'Something went wrong while trying to inflate your savegame. It seems to be related to adblock and we are looking into it.' })                
+                self.worker.post_message({ 'command': 'alert', 'message': 'Something went wrong while trying to inflate your savegame. It seems to be related to adblock and we are looking into it.' })                
 
                 raise error
             
 
-            currentPercentage = round(self.handledByte / self.maxByte * 100)
-            self.worker.postMessage({ 'command': 'loaderMessage', 'message': 'Inflating save game (%1$s%)...', 'replace': currentPercentage })
-            self.worker.postMessage({ 'command': 'loaderProgress', 'percentage': (currentPercentage * 0.3) })
+            currentPercentage = round(self.handledByte / self.max_byte * 100)
+            self.worker.post_message({ 'command': 'loaderMessage', 'message': 'Inflating save game (%1$s%)...', 'replace': currentPercentage })
+            self.worker.post_message({ 'command': 'loaderProgress', 'percentage': (currentPercentage * 0.3) })
         
 
-        del self.arrayBuffer
+        del self.array_buffer
         print(f'Inflated: {len(self.currentChunks)} chunks...')
-        self.worker.postMessage({ 'command': 'loaderMessage', 'message': 'Merging inflated chunks...' })
+        self.worker.post_message({ 'command': 'loaderMessage', 'message': 'Merging inflated chunks...' })
 
         tempChunk = bytearray(itertools.chain(*self.currentChunks))
 
         # Parse them as usual while skipping the first 4 bytes!
         del self.currentChunks
-        self.maxByte = len(tempChunk)
-        self.bufferView = DataView(tempChunk)
-        self.bufferView.buf.seek(4, 0)
+        self.max_byte = len(tempChunk)
+        self.buffer_view = DataView(tempChunk)
+        self.buffer_view.buf.seek(4, 0)
 
         if self.header['saveVersion'] >= 29:
             # unused number
@@ -602,9 +631,9 @@ class BlueprintParser(Parser):
                 objectType = self.read_int()
                 match objectType:
                     case 0:
-                        object = self.readObject()
-                        self.objects[object['pathName']] = object
-                        entitiesToObjects.append(object['pathName'])
+                        obj = self.readObject()
+                        self.objects[obj['pathName']] = obj
+                        entitiesToObjects.append(obj['pathName'])
                     case 1:
                         actor = self.readActor()
                         self.objects[actor['pathName']] = actor
@@ -613,7 +642,7 @@ class BlueprintParser(Parser):
                         entitiesToObjects.append(None)
                         print('Unknown object type', objectType)
                
-            self.worker.postMessage({ 'command': 'endSaveLoading' })
+            self.worker.post_message({ 'command': 'endSaveLoading' })
             return
         
 

@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from typing import Literal
 
 from Objects import BaseFactoryObject, rawFactoryObject
-from Parser import Building_Conveyor
+from _Parser import Building_Conveyor
 
 @dataclass
 class BaseConveyor(BaseFactoryObject, raw={}):
@@ -16,7 +16,7 @@ class BaseConveyor(BaseFactoryObject, raw={}):
         - get_tier => int: gets the tier of the conveyor/lift
         - is_lift => bool: gets if this conveyor is a conveyor lift
         - get_throughput => int: gets the number of items per minute that this conveyor can handle 
-    """ 
+    """
     def __init_subclass__(
             cls,
             raw: rawFactoryObject,
