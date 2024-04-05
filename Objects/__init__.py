@@ -1,7 +1,17 @@
 """The base of all Satisfactory Objects"""
 from dataclasses import dataclass
 
-RawFactoryObject = dict[str, dict[str, str|list[float|int]|dict[str,list[float|int]]]]
+RawFactoryObject = dict[str,
+    dict[str,
+        str|
+        int|
+        dict[str,
+            list[
+                float
+            ]
+        ]
+    ]
+]
 @dataclass
 class BaseFactoryObject:
     """BaseFactoryObject:
