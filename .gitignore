@@ -1,6 +1,6 @@
 Blueprints/
-*.sbp
-*.sbpcfg
+#*.sbp
+#*.sbpcfg
 
 # Python cache files
 *.pyc

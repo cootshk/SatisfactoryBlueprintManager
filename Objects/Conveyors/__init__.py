@@ -1,5 +1,5 @@
+"""Base class & methods for all conveyors"""
 from dataclasses import dataclass
-from functools import cache
 from typing import Literal
 
 from Objects import BaseFactoryObject, rawFactoryObject
@@ -17,7 +17,12 @@ class BaseConveyor(BaseFactoryObject, raw={}):
         - is_lift => bool: gets if this conveyor is a conveyor lift
         - get_throughput => int: gets the number of items per minute that this conveyor can handle 
     """ 
-    def __init_subclass__(cls, raw: rawFactoryObject, tier: Literal[1,2,3,4,5], is_lift: bool) -> None:
+    def __init_subclass__(
+            cls,
+            raw: rawFactoryObject,
+            tier: Literal[1,2,3,4,5],
+            is_lift: bool
+            ) -> None:
         cls.raw = raw # type: ignore
         # Mk. 1 vs Mk. 5
         assert tier <= 5 and tier > 0 and isinstance(tier, int), f"Tier {tier} is out of bounds!"
@@ -25,9 +30,8 @@ class BaseConveyor(BaseFactoryObject, raw={}):
         #conveyor lift
         cls._lift = is_lift #type: ignore
         return super().__init_subclass__(raw)
-    
+
     # Get properties
-    @cache
     def get_tier(self) -> Literal[1,2,3,4,5]:
         """Gets the current tier of the conveyor
 
@@ -36,7 +40,6 @@ class BaseConveyor(BaseFactoryObject, raw={}):
         """
         assert self._tier in range(1,6)
         return self._tier # type: ignore
-    @cache
     def is_lift(self) -> bool:
         """Gets if the conveyor is a conveyor lift
 
@@ -44,9 +47,9 @@ class BaseConveyor(BaseFactoryObject, raw={}):
             bool: True if this is a conveyor lift, False otherwise.
         """
         return self._lift
-    @cache
     def get_throughput(self) -> Literal[60, 120, 270, 480, 780]:
-        """Gets the throughput of this tier of conveyor. See https://satisfactory.wiki.gg/wiki/Conveyor_Belts#Item_transportation for more info.
+        """Gets the throughput of this tier of conveyor. 
+        See https://satisfactory.wiki.gg/wiki/Conveyor_Belts#Item_transportation for more info.
 
         Returns:
             int: The amount of items per minute that this conveyor can handle 
@@ -65,6 +68,16 @@ class BaseConveyor(BaseFactoryObject, raw={}):
             case _:
                 raise ValueError("Invalid conveyor tier!")
 
-def isConveyor(obj: BaseFactoryObject | rawFactoryObject) -> bool:
-    if isinstance(obj, BaseFactoryObject): return isinstance(obj, BaseConveyor)
-    else:                                  return Building_Conveyor.isConveyor(obj)
+def is_conveyor(obj: BaseFactoryObject | rawFactoryObject) -> bool:
+    """Tells if this object is a conveyor or a conveyor lift.
+
+    Args:
+        obj (BaseFactoryObject | rawFactoryObject): The object to check
+
+    Returns:
+        bool: True if the object is a conveyor or lift.
+    """
+    if isinstance(obj, BaseFactoryObject):
+        return isinstance(obj, BaseConveyor)
+    else:
+        return Building_Conveyor.isConveyor(obj)
