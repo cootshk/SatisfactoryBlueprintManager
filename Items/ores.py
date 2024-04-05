@@ -32,8 +32,8 @@ class SulfurItem(BaseItem, raw={}, MaxStackSize=100, SinkTickets=11, Radioactive
     def __init__(self, raw: RawFactoryObject, /, *, amount: int = 1)-> None:
         super().__init_subclass__(
             raw, MaxStackSize=100, amount=amount, SinkTickets=11, Radioactive=False)
-class UraniumOreItem(BaseItem, raw={}, MaxStackSize=100, SinkTickets=35, Radioactive=False):
-    """Uranium Ore"""
+class UraniumItem(BaseItem, raw={}, MaxStackSize=100, SinkTickets=35, Radioactive=False):
+    """Uranium"""
     def __init__(self, raw: RawFactoryObject, /, *, amount: int = 1)-> None:
         super().__init_subclass__(
             raw, MaxStackSize=100, amount=amount, SinkTickets=35, Radioactive=False)
