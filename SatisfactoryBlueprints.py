@@ -1,7 +1,11 @@
 """Satisfactory Blueprint Parser, API, and more."""
-from _Parser import Worker, BlueprintParser, Options
-from Objects.Conveyors import is_conveyor
-from _Classes import get_class
+# Hide hidden imports
+import Objects.Conveyors
+from _Parser import Worker as _W, BlueprintParser as _BP, Options as _O
+#from Objects.Conveyors import is_conveyor
+from _Classes import get_class as _gc
+
+import Objects, Items
 
 if __name__ == '__main__':
     import argparse
@@ -16,7 +20,7 @@ if __name__ == '__main__':
     if args.cli:
         print(f"Parsing {str(args.file)}!")
         assert os.path.isfile(args.file) and str(args.file).removesuffix("/").endswith(".sbp")
-        p = BlueprintParser(Worker(), Options(args.file))
+        p = _BP(_W(), _O(args.file))
         print(p.objects)
     else:
         # GUI
@@ -50,7 +54,7 @@ if __name__ == '__main__':
         )
         assert os.path.isfile(filename)
 
-        p = BlueprintParser(Worker(), Options(filename, lang="en_us"))
+        p = _BP(_W(), _O(filename, lang="en_us"))
         # Generate window to show blueprint contents
         #print(f"Blueprint data: \n{p.objects}")
 
@@ -68,10 +72,10 @@ if __name__ == '__main__':
         for k,v in zip(p.objects.keys(), p.objects.values()):
             print({k: v})
             print()
-            if is_conveyor({k:v}):
+            if Objects.Conveyors.is_conveyor({k:v}):
                 totals["conveyors"] += 1
 
-            get_class({k:v})
+            _gc({k:v})
         print(f"Total conveyors: {totals['conveyors']}")
 
         # Run window
