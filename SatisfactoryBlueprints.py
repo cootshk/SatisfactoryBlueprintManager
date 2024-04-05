@@ -50,7 +50,7 @@ if __name__ == '__main__':
             initialdir=os.path.expandvars(
                 r'%LOCALAPPDATA%\FactoryGame\Saved\SaveGames\blueprints'
                 ) if os.name == "nt" else None
-            # C:\Users\___\AppData\Local\FactoryGame\Saved\SaveGames\blueprints\Atlass Factory
+            # C:\Users\___\AppData\Local\FactoryGame\Saved\SaveGames\blueprints\SaveGame
         )
         assert os.path.isfile(filename)
 
