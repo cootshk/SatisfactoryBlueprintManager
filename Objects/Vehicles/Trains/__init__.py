@@ -1,6 +1,6 @@
 from ...Vehicles import BaseVehicle
-from Objects import rawFactoryObject
+from Objects import RawFactoryObject
 
 class BaseTrainCar(BaseVehicle, raw={}):
-    def __init__(self, raw: rawFactoryObject):
+    def __init__(self, raw: RawFactoryObject):
         pass
