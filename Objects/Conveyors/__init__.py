@@ -19,7 +19,7 @@ class BaseConveyor(BaseFactoryObject, raw={}):
     """
     def __init_subclass__(
             cls,
-            raw: RawFactoryObject, /,*,
+            raw: RawFactoryObject, *,
             tier: Literal[1,2,3,4,5],
             is_lift: bool,
             throughput: Literal[60,120,270,480,780]
