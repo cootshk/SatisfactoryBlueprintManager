@@ -9,8 +9,10 @@ class BaseStackable:
     def __init_subclass__(cls, raw: RawFactoryObject, /,*, amount: int = 1) -> None:
         cls.raw = raw #type: ignore
         cls.amount = amount #type: ignore
-class BaseItem(BaseStackable, raw={}):
+class BaseItem(BaseStackable, raw={}, amount=1): #type: ignore
     """Any item"""
-    def __init_subclass__(cls, raw: RawFactoryObject, MaxStackSize: int, amount: int=1) -> None:
+    def __init_subclass__(cls, raw: RawFactoryObject, MaxStackSize: int, amount: int=1, SinkTickets: int | None = None, Radioactive: bool = False) -> None:
         cls.MaxStackSize = MaxStackSize #type: ignore
-        return super().__init_subclass__(raw, amount)
+        cls.SinkTickets = SinkTickets #type: ignore
+        cls.Radioactive = Radioactive #type: ignore
+        return super().__init_subclass__(raw, amount=amount)
