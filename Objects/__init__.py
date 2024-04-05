@@ -3,8 +3,15 @@ from dataclasses import dataclass
 
 @dataclass
 class BaseFactoryObject:
+    """BaseFactoryObject:
+    Any object that can appear in game.
+
+    Properties:
+        - raw (dict): the raw JSON of the object (before compression)
+    """
     def __init_subclass__(cls, raw: dict) -> None:
-        assert isinstance(raw, dict)
+        if not isinstance(raw, dict): raise TypeError("raw must be a rawFactoryObject!")
+#        if raw == {}: raise ValueError("raw does not contain a factory object!")
         cls.raw = raw # type: ignore
 
     def __repr__(self) -> str:

@@ -1,3 +1,6 @@
+# DEBUG LINE: REMOVE THIS
+import SatisfactoryBlueprints
+
 from Parser import Worker, BlueprintParser, Options
 from Objects import BaseFactoryObject
 from Objects.Conveyors import BaseConveyor, isConveyor
