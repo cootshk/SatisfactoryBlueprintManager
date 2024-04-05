@@ -2,6 +2,6 @@
     "python.analysis.typeCheckingMode": "basic",
     "python.analysis.autoImportCompletions": true,
     "pylint.args": [
-        "--module-naming-style=PascalCase"
+        "--module-naming-style=any"
     ]
 }

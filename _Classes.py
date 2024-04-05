@@ -1,22 +1,37 @@
+"""Tools to convert raw JSON into the classes"""
+from Objects.Splitters.smart import SmartSplitter
 from Objects.Splitters.splitter import Splitter
-from Objects import BaseFactoryObject, rawFactoryObject
-from Objects.Conveyors import BaseConveyor
-from Objects.Conveyors.mk1 import ConveyorMk1, ConveyorLiftMk1
+from Objects import BaseFactoryObject, RawFactoryObject
+from Objects.Conveyors.mk1 import ConveyorMk1
 from Objects.Conveyors.mk2 import ConveyorMk2
 from Objects.Conveyors.mk3 import ConveyorMk3
 from Objects.Conveyors.mk4 import ConveyorMk4
 from Objects.Conveyors.mk5 import ConveyorMk5
 
-def get_class(obj: rawFactoryObject):
+def get_class(obj: RawFactoryObject) -> BaseFactoryObject:
+    """Gets the python class of an object from the raw JSON
+
+    Args:
+        obj (RawFactoryObject): The raw JSON to find the class for
+
+    Raises:
+        KeyError: There is no class associated with this JSON
+
+    Returns:
+        BaseFactoryObject: The Python Class
+    """
     classname = list(obj.values())[0]["className"]
     currentitem = dict(objects)
     for path in classname:
         try:
             currentitem = currentitem[path] #type: ignore
-        except KeyError:
+        except KeyError: #! OBJECT NOT FOUND
+            if isinstance(currentitem, BaseFactoryObject): #? If we have a class already
+                return currentitem
             print(classname)
             input()
             break
+    raise KeyError(f"Object {classname} not found!")
 
 
 
@@ -27,7 +42,7 @@ objects = {
                 "Factory": {
                     # Splitters
                     "CA_Splitter": Splitter,
-                    "CA_SplitterSmart": object,
+                    "CA_SplitterSmart": SmartSplitter,
                     # Belts
                     "ConveyorBeltMk1": ConveyorMk1,
                     "ConveyorBeltMk2": ConveyorMk2,

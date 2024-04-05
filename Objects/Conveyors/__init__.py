@@ -2,7 +2,7 @@
 from dataclasses import dataclass
 from typing import Literal
 
-from Objects import BaseFactoryObject, rawFactoryObject
+from Objects import BaseFactoryObject, RawFactoryObject
 from _Parser import Building_Conveyor
 
 @dataclass
@@ -19,7 +19,7 @@ class BaseConveyor(BaseFactoryObject, raw={}):
     """
     def __init_subclass__(
             cls,
-            raw: rawFactoryObject,
+            raw: RawFactoryObject,
             tier: Literal[1,2,3,4,5],
             is_lift: bool
             ) -> None:
@@ -68,11 +68,11 @@ class BaseConveyor(BaseFactoryObject, raw={}):
             case _:
                 raise ValueError("Invalid conveyor tier!")
 
-def is_conveyor(obj: BaseFactoryObject | rawFactoryObject) -> bool:
+def is_conveyor(obj: BaseFactoryObject | RawFactoryObject) -> bool:
     """Tells if this object is a conveyor or a conveyor lift.
 
     Args:
-        obj (BaseFactoryObject | rawFactoryObject): The object to check
+        obj (BaseFactoryObject | RawFactoryObject): The object to check
 
     Returns:
         bool: True if the object is a conveyor or lift.

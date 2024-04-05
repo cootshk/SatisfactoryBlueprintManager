@@ -1,7 +1,7 @@
 """Satisfactory Blueprint Parser, API, and more."""
 from _Parser import Worker, BlueprintParser, Options
 from Objects.Conveyors import is_conveyor
-from classes import get_class
+from _Classes import get_class
 
 if __name__ == '__main__':
     import argparse

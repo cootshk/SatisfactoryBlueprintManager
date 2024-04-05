@@ -1,21 +1,29 @@
-from typing import Any, Literal
+"""Splitter base class & Rule class"""
+from typing import Literal
 from Items import BaseItem
-from Objects import BaseFactoryObject
+from Objects import BaseFactoryObject, RawFactoryObject
 
 
 class BaseSplitter(BaseFactoryObject, raw={}):
-    def __init_subclass__(cls, raw: dict) -> None:
-        return super().__init_subclass__(raw)
+    """The base splitter/merger class"""
+    def __init_subclass__(cls, raw: RawFactoryObject) -> None:
+        super().__init_subclass__(raw)
 
 
-class SpecialRule:
-    class Any:
-        pass
-    class Overflow:
-        pass
-    class Undefined:
-        pass
+SpecialSplitterRule = Literal[
+    "Any",
+    "Any Undefined",
+    "Overflow",
+    "None"
+]
+
 
 class SplitterRule:
-    def __init__(self, item: BaseItem | SpecialRule | None = None) -> None:
-        self.item = item
+    """Any rule you can put inside a splitter or smart splitter"""
+    def __init__(self, rule: BaseItem | SpecialSplitterRule = "Any") -> None:
+        assert (
+            isinstance(rule, BaseItem)
+            ) or (
+            rule in ["Any","Any Undefined","Overflow","None"]
+        ), "Invalid Splitter Rule!"
+        self.rule = rule
