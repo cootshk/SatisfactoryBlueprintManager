@@ -20,7 +20,8 @@ def get_class(obj: RawFactoryObject) -> BaseFactoryObject:
     Returns:
         BaseFactoryObject: The Python Class
     """
-    classname = list(obj.values())[0]["className"]
+    assert isinstance(classpath:=list(obj.values())[0]["className"], str)
+    classname = classpath.removeprefix("").split("/")
     currentitem = dict(objects)
     for path in classname:
         try:
