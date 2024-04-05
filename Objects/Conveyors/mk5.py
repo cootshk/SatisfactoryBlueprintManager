@@ -2,10 +2,10 @@
 from dataclasses import dataclass
 
 from . import BaseConveyor
-from .. import rawFactoryObject
+from .. import RawFactoryObject
 
 @dataclass
-class BaseConveyorMk5(BaseConveyor, raw={}, tier=5, is_lift=False):
+class BaseConveyorMk5(BaseConveyor, raw={}, tier=5, is_lift=False, throughput=780): #type: ignore
     """A base conveyor (mk. 5)
 
     Args:
@@ -14,19 +14,19 @@ class BaseConveyorMk5(BaseConveyor, raw={}, tier=5, is_lift=False):
     Properties:
         See #BaseConveyor 
     """
-    def __init_subclass__(cls, raw: rawFactoryObject, is_lift: bool) -> None:
-        return super().__init_subclass__(raw, 5, is_lift)
+    def __init_subclass__(cls, raw: RawFactoryObject, is_lift: bool) -> None:
+        return super().__init_subclass__(raw, tier=5, is_lift=is_lift, throughput=780)
 
 @dataclass
 class ConveyorMk5(BaseConveyorMk5, raw={}, is_lift=False):
     """A Mk. 5 Conveyor Belt
 
     Args:
-        raw (rawFactoryObject): Raw JSON Data.
+        raw (RawFactoryObject): Raw JSON Data.
     Properties:
         See #BaseConveyor
     """
-    def __init__(self, raw: rawFactoryObject):
+    def __init__(self, raw: RawFactoryObject):
         super().__init_subclass__(raw,is_lift=False)
 
 @dataclass
@@ -34,9 +34,9 @@ class ConveyorLiftMk5(BaseConveyorMk5, raw={}, is_lift=True):
     """A Mk. 5 Conveyor Lift
     
     Args:
-        raw (rawFactoryObject): Raw JSON Data.
+        raw (RawFactoryObject): Raw JSON Data.
     Properties:
         See #BaseConveyor
     """
-    def __init__(self, raw: rawFactoryObject):
+    def __init__(self, raw: RawFactoryObject):
         super().__init_subclass__(raw,is_lift=False)

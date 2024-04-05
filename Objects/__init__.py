@@ -1,6 +1,5 @@
 """The base of all Satisfactory Objects"""
 from dataclasses import dataclass
-from .. import BaseClassException
 
 RawFactoryObject = dict[str, dict[str, str|list[float|int]|dict[str,list[float|int]]]]
 @dataclass
@@ -11,7 +10,7 @@ class BaseFactoryObject:
     Properties:
         - raw (dict): the raw JSON of the object (before compression)
     """
-    def __init_subclass__(cls, raw: dict) -> None:
+    def __init_subclass__(cls, raw: RawFactoryObject) -> None:
         if not isinstance(raw, dict):
             raise TypeError("raw must be a RawFactoryObject!")
 #        if raw == {}: raise ValueError("raw does not contain a factory object!")
@@ -26,5 +25,3 @@ class BaseFactoryObject:
             return False
     def __hash__(self) -> int:
         return hash(self.raw)
-
-

@@ -2,10 +2,10 @@
 from dataclasses import dataclass
 
 from . import BaseConveyor
-from .. import rawFactoryObject
+from .. import RawFactoryObject
 
 @dataclass
-class BaseConveyorMk3(BaseConveyor, raw={}, tier=3, is_lift=False):
+class BaseConveyorMk3(BaseConveyor, raw={}, tier=3, is_lift=False, throughput=270): #type: ignore
     """A base conveyor (mk. 3)
 
     Args:
@@ -14,8 +14,8 @@ class BaseConveyorMk3(BaseConveyor, raw={}, tier=3, is_lift=False):
     Properties:
         See #BaseConveyor 
     """
-    def __init_subclass__(cls, raw: rawFactoryObject, is_lift: bool) -> None:
-        return super().__init_subclass__(raw, 3, is_lift)
+    def __init_subclass__(cls, raw: RawFactoryObject, is_lift: bool) -> None:
+        return super().__init_subclass__(raw, tier=3, is_lift=is_lift, throughput=270)
 
 @dataclass
 class ConveyorMk3(BaseConveyorMk3, raw={}, is_lift=False):
@@ -26,7 +26,7 @@ class ConveyorMk3(BaseConveyorMk3, raw={}, is_lift=False):
     Properties:
         See #BaseConveyor
     """
-    def __init__(self, raw: rawFactoryObject):
+    def __init__(self, raw: RawFactoryObject):
         super().__init_subclass__(raw,is_lift=False)
 
 @dataclass
@@ -38,5 +38,5 @@ class ConveyorLiftMk3(BaseConveyorMk3, raw={}, is_lift=True):
     Properties:
         See #BaseConveyor
     """
-    def __init__(self, raw: rawFactoryObject):
+    def __init__(self, raw: RawFactoryObject):
         super().__init_subclass__(raw,is_lift=False)

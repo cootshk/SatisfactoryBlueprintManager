@@ -5,7 +5,7 @@ from . import BaseConveyor
 from .. import RawFactoryObject
 
 @dataclass
-class BaseConveyorMk1(BaseConveyor, raw={}, tier=1, is_lift=False):
+class BaseConveyorMk1(BaseConveyor, raw={}, tier=1, is_lift=False, throughput=60): # type: ignore
     """A base conveyor (mk. 1)
 
     Args:
@@ -15,7 +15,7 @@ class BaseConveyorMk1(BaseConveyor, raw={}, tier=1, is_lift=False):
         See #BaseConveyor 
     """
     def __init_subclass__(cls, raw: RawFactoryObject, is_lift: bool) -> None:
-        return super().__init_subclass__(raw, 1, is_lift)
+        return super().__init_subclass__(raw, tier=1, is_lift=is_lift, throughput=60)
 
 @dataclass
 class ConveyorMk1(BaseConveyorMk1, raw={}, is_lift=False):
