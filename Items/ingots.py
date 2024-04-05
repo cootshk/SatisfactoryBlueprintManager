@@ -1,3 +1,5 @@
+"""All of the ingot items"""
+# TODO: Add MaxStackSize
 from Items import BaseItem
 
 

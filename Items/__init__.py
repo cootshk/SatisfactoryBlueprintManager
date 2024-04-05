@@ -6,7 +6,7 @@ from Objects import RawFactoryObject
 
 class BaseStackable:
     """Any item or fluid"""
-    def __init_subclass__(cls, raw: RawFactoryObject, amount: int = 1) -> None:
+    def __init_subclass__(cls, raw: RawFactoryObject, /,*, amount: int = 1) -> None:
         cls.raw = raw #type: ignore
         cls.amount = amount #type: ignore
 class BaseItem(BaseStackable, raw={}):
