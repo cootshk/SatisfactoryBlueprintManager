@@ -20,7 +20,7 @@ class BaseConveyor(BaseFactoryObject, raw={}):
     def __init_subclass__(cls, raw: rawFactoryObject, tier: Literal[1,2,3,4,5], is_lift: bool) -> None:
         cls.raw = raw # type: ignore
         # Mk. 1 vs Mk. 5
-        assert tier >= 5 and tier > 0 and isinstance(tier, int)
+        assert tier <= 5 and tier > 0 and isinstance(tier, int), f"Tier {tier} is out of bounds!"
         cls._tier = tier #type: ignore
         #conveyor lift
         cls._lift = is_lift #type: ignore

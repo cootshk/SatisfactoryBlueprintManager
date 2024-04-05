@@ -4,6 +4,7 @@ import SatisfactoryBlueprints
 from Parser import Worker, BlueprintParser, Options
 from Objects import BaseFactoryObject
 from Objects.Conveyors import BaseConveyor, isConveyor
+from classes import get_class
 
 if __name__ == '__main__':
     import argparse
@@ -67,6 +68,8 @@ if __name__ == '__main__':
             print()
             if isConveyor({k:v}):
                 conveyors += 1
+        
+            get_class({k:v})
 
         # Run window
         window.mainloop()

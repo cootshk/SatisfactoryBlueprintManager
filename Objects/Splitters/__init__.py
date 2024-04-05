@@ -1,6 +1,6 @@
 from typing import Any, Literal
-from ...Items import BaseItem
-from ...Objects import BaseFactoryObject
+from Items import BaseItem
+from Objects import BaseFactoryObject
 
 
 class BaseSplitter(BaseFactoryObject, raw={}):

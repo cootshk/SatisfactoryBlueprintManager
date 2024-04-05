@@ -1,4 +1,4 @@
-from ...Objects import rawFactoryObject
+from Objects import rawFactoryObject
 from ..Splitters import BaseSplitter
 
 
