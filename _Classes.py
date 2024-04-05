@@ -24,6 +24,8 @@ def get_class(obj: RawFactoryObject) -> BaseFactoryObject:
     classname = classpath.removeprefix("").split("/")
     currentitem = dict(objects)
     for path in classname:
+        if path == "":
+            continue
         try:
             currentitem = currentitem[path] #type: ignore
         except KeyError: #! OBJECT NOT FOUND
