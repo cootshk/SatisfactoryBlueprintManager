@@ -3,7 +3,7 @@ import SatisfactoryBlueprints
 
 from Parser import Worker, BlueprintParser, Options
 from Objects import BaseFactoryObject
-from Objects.Conveyors import BaseConveyor, isConveyor
+from Objects.Conveyors import BaseConveyor, is_conveyor
 from classes import get_class
 
 if __name__ == '__main__':
@@ -66,7 +66,7 @@ if __name__ == '__main__':
         for k,v in zip(p.objects.keys(), p.objects.values()):
             print({k: v})
             print()
-            if isConveyor({k:v}):
+            if is_conveyor({k:v}):
                 conveyors += 1
         
             get_class({k:v})
