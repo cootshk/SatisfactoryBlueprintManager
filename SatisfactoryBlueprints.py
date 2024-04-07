@@ -79,4 +79,4 @@ if __name__ == '__main__':
         print(f"Total conveyors: {totals['conveyors']}")
 
         # Run window
-        window.mainloop()
+        #window.mainloop()

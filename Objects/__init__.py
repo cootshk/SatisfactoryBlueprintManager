@@ -35,3 +35,9 @@ class BaseFactoryObject:
             return False
     def __hash__(self) -> int:
         return hash(self.raw)
+
+class BaseConnector:
+    def __init_subclass__(cls, raw: RawFactoryObject, *connections: BaseFactoryObject) -> None:
+        cls.raw = raw #type: ignore
+        cls.connections = connections #type: ignore
+        pass

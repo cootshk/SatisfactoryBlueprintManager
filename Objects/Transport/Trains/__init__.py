@@ -1,4 +1,4 @@
-from ...Vehicles import BaseVehicle
+from ...Transport import BaseVehicle
 from Objects import RawFactoryObject
 
 class BaseTrainCar(BaseVehicle, raw={}):

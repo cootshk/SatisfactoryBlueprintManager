@@ -2,7 +2,7 @@
 from dataclasses import dataclass
 from typing import Literal, overload
 
-from Objects import BaseFactoryObject, RawFactoryObject
+from Objects import BaseConnector, BaseFactoryObject, RawFactoryObject
 from _Parser import Building_Conveyor
 
 @dataclass
@@ -52,3 +52,9 @@ def is_conveyor(obj: BaseFactoryObject | RawFactoryObject) -> bool:
         return isinstance(obj, BaseConveyor)
     else:
         return Building_Conveyor.isConveyor(obj)
+
+
+class ConveyorPole(BaseConnector, raw={}):
+    """A conveyor pole. Connects two conveyors together."""
+    def __init__(self, raw: RawFactoryObject, left: BaseConveyor, right: BaseConveyor) -> None:
+        super().__init_subclass__(raw, left, right)
