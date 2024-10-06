@@ -109,7 +109,60 @@ vector<byte> open_blueprint(const string &path, const string &savename, const st
     cout << "File size: " << buffer.size() << endl;
     return buffer;
 }
-
+struct BlueprintConfigContents {
+    vector<byte>* raw{};
+    ByteReader* parser{};
+    string Name;
+    string Description;
+    int IconID{};
+    string IconName;
+    int ColorR{};
+    int ColorG{};
+    int ColorB{};
+    int ColorA{};
+    string ColorHex;
+    string IconLibrary;
+    string IconLibraryType;
+};
+BlueprintConfigContents parse_blueprint(const string& path, const string& savename, const string& blueprint) {
+    /*
+     * Byte order:
+     * Always 2 (we don't know): Int32
+     * Description: String
+     * Icon ID: Int32
+     * ColorR: Int32
+     * ColorG: Int32
+     * ColorB: Int32
+     * ColorA: Int32
+     * Optional:
+     * Icon Library: String
+     * Icon Library Type: String
+     */
+    auto parsed_bp = open_blueprint(path, savename, blueprint);
+    auto parser = ByteReader(parsed_bp);
+    BlueprintConfigContents contents;
+    contents.raw = &parsed_bp;
+    contents.parser = &parser;
+    contents.Name = blueprint;
+    parser.readInt32(); // Skip over the first int which is always 2 for some reason
+    contents.Description = parser.readString();
+    contents.IconID = parser.readInt32();
+    contents.IconName = get_icon_name(contents.IconID);
+    contents.ColorR = parser.readInt32();
+    contents.ColorG = parser.readInt32();
+    contents.ColorB = parser.readInt32();
+    contents.ColorA = parser.readInt32();
+    contents.ColorHex = parser.readHex() + parser.readHex() + parser.readHex() + parser.readHex();
+    try {
+        contents.IconLibrary = parser.readString();
+        contents.IconLibraryType = parser.readString();
+    } catch(const runtime_error& e) {
+//        cout << e.what() << endl;
+        contents.IconLibrary = "";
+        contents.IconLibraryType = "";
+    }
+    return contents;
+}
 int main() {
     std::cout << "Hello, World!" << std::endl;
     const string path = get_blueprint_path();
@@ -136,29 +189,13 @@ int main() {
     cout << "Enter blueprint name: ";
     string blueprint;
     getline(cin, blueprint);
-    vector<byte> parsed_bp = open_blueprint(path, savename, blueprint);
-    cout << "Parsed blueprint:" << endl;
-    for (byte i : parsed_bp) {
-        cout << static_cast<int>(i) << " ";
-    }
-    cout << endl;
-    cout << "First int:" << endl;
-    auto parser = ByteReader(parsed_bp);
-    cout << parser.readInt32() << endl;
-    cout << "Description:" << endl;
-    cout << parser.readString() << endl;
-    cout << "Icon ID:" << endl;
-    int iconID = parser.readInt32();
-    cout << iconID << endl;
-    cout << "Icon Name:" << endl;
-    cout << get_icon_name(iconID) << endl;
-    cout << "Color: (RGBA)" << endl; // RGBA
-    cout << parser.readInt32() << " " << parser.readInt32() << " " << parser.readInt32() << " " << parser.readInt32() << endl;
-    parser.position -= 16;
-    cout << "Color: (HEX)" << endl;
-    cout << "#" << parser.readHex() << parser.readHex() << parser.readHex() << parser.readHex() << endl;
-    cout << "Length:" << endl;
-    cout << parser.position << " out of: " << parser.bytestream.size() << endl;
+    auto contents = parse_blueprint(path, savename, blueprint);
+    cout << "Name: " << contents.Name << endl;
+    cout << "Description: " << contents.Description << endl;
+    cout << "Icon ID: " << contents.IconID << endl;
+    cout << "Icon Name: " << contents.IconName << endl;
+    cout << "Color: (RGBA) " << contents.ColorR << " " << contents.ColorG << " " << contents.ColorB << " " << contents.ColorA << endl;
+    cout << "Color: (HEX) " << "#" + contents.ColorHex << endl;
 
     return 0;
 }
