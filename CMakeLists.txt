@@ -3,4 +3,5 @@ project(SBM)
 
 set(CMAKE_CXX_STANDARD 20)
 
-add_executable(SBM main.cpp)
+add_executable(SBM main.cpp
+        read_bytes.h)

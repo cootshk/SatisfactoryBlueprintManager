@@ -13,6 +13,8 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #endif
+#include "read_bytes.h"
+
 using namespace std;
 namespace fs = filesystem;
 const string windows_path = R"(C:\Users\{user}\AppData\Local\FactoryGame\Saved\SaveGames\blueprints\)";
@@ -83,14 +85,14 @@ vector<string> get_save_blueprints(const string &path, const string &savename) {
     return blueprints;
 }
 
-vector<uint> open_blueprint(const string &path, const string &savename, const string &blueprint) {
+vector<byte> open_blueprint(const string &path, const string &savename, const string &blueprint) {
 //    https://github.com/etothepii4/satisfactory-file-parser/blob/main/src/parser/parser.ts
 // Returns an uint8 array of the blueprint file
     fs::path file_path = path+savename+"/"+blueprint+".sbpcfg";
     if (!fs::exists(file_path)) {
         throw runtime_error("File does not exist");
     }
-    vector<uint> buffer;
+    vector<byte> buffer;
     ifstream file(file_path, ios::binary);
     if (file.is_open()) {
         file.seekg(0, ios::end);
@@ -133,13 +135,17 @@ int main() {
     cout << "Enter blueprint name: ";
     string blueprint;
     getline(cin, blueprint);
-    vector<uint> parsed_bp = open_blueprint(path, savename, blueprint);
+    vector<byte> parsed_bp = open_blueprint(path, savename, blueprint);
     cout << "Parsed blueprint:" << endl;
-    for (uint i : parsed_bp) {
-        cout << i << " ";
+    for (byte i : parsed_bp) {
+        cout << static_cast<int>(i) << " ";
     }
     cout << endl;
-
+    cout << "First int:" << endl;
+    auto parser = ByteReader(parsed_bp);
+    cout << parser.readInt8() << endl;
+    cout << "Description:" << endl;
+    cout << parser.readString() << endl;
 
     return 0;
 }
