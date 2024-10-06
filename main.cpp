@@ -14,6 +14,7 @@
 #include <unistd.h>
 #endif
 #include "read_bytes.h"
+#include "icon_ids.h"
 
 using namespace std;
 namespace fs = filesystem;
@@ -147,7 +148,10 @@ int main() {
     cout << "Description:" << endl;
     cout << parser.readString() << endl;
     cout << "Icon ID:" << endl;
-    cout << parser.readInt32() << endl;
+    int iconID = parser.readInt32();
+    cout << iconID << endl;
+    cout << "Icon Name:" << endl;
+    cout << get_icon_name(iconID) << endl;
     cout << "Color: (RGBA)" << endl; // RGBA
     cout << parser.readInt32() << " " << parser.readInt32() << " " << parser.readInt32() << " " << parser.readInt32() << endl;
     parser.position -= 16;
