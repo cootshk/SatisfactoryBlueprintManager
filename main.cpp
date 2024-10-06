@@ -152,6 +152,7 @@ BlueprintConfigContents parse_blueprint(const string& path, const string& savena
     contents.ColorG = parser.readInt32();
     contents.ColorB = parser.readInt32();
     contents.ColorA = parser.readInt32();
+    parser.position -= 16; // Go back to the start of the color values
     contents.ColorHex = parser.readHex() + parser.readHex() + parser.readHex() + parser.readHex();
     try {
         contents.IconLibrary = parser.readString();
