@@ -80,6 +80,29 @@ vector<string> get_save_blueprints(const string &path, const string &savename) {
     return blueprints;
 }
 
+vector<uint> parse_blueprint(const string &path, const string &savename, const string &blueprint) {
+//    https://github.com/etothepii4/satisfactory-file-parser/blob/main/src/parser/parser.ts
+    fs::path file_path = path+savename+"/"+blueprint+".sbpcfg";
+    if (!fs::exists(file_path)) {
+        throw runtime_error("File does not exist");
+    }
+    vector<uint> buffer;
+    ifstream file(file_path, ios::binary);
+    if (file.is_open()) {
+        file.seekg(0, ios::end);
+        size_t size = file.tellg();
+        file.seekg(0, ios::beg);
+        buffer.resize(size);
+        file.read(reinterpret_cast<char*>(buffer.data()), size);
+        file.close();
+    } else {
+        cout << "Failed to open file" << endl;
+        throw fs::filesystem_error("Failed to open file", file_path, error_code());
+    }
+    cout << "File size: " << buffer.size() << endl;
+    return buffer;
+}
+
 int main() {
     std::cout << "Hello, World!" << std::endl;
     const string path = get_blueprint_path();
@@ -103,6 +126,10 @@ int main() {
     for (const string& name : blueprints) {
         cout << name << endl;
     }
+    cout << "Enter blueprint name: ";
+    string blueprint;
+    getline(cin, blueprint);
+    parser(path, savename, blueprint);
 
 
     return 0;
