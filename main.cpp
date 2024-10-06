@@ -65,6 +65,20 @@ vector<string> get_saves(const string &path) {
     }
     return saves;
 }
+vector<string> get_save_blueprints(const string &path, const string &savename) {
+    if (savename.empty()) {
+        return {};
+    }
+    vector<string> blueprints;
+    try {
+        for (const auto &entry: fs::directory_iterator(path + savename)) {
+            if (entry.path().filename().string().ends_with(".sbp")) blueprints.push_back(entry.path().filename().string().erase(entry.path().filename().string().size() - 4)); // remove .sbp
+        }
+    } catch (const fs::filesystem_error& e) {
+        return {};
+    }
+    return blueprints;
+}
 
 int main() {
     std::cout << "Hello, World!" << std::endl;
@@ -75,6 +89,18 @@ int main() {
     }
     cout << "Detected saves:" << endl;
     for (const string& name : get_saves(path)) {
+        cout << name << endl;
+    }
+    cout << "Enter save name: ";
+    string savename;
+    getline(cin, savename);
+    cout << "Detected blueprints for save " << savename << ":" << endl;
+    auto blueprints = get_save_blueprints(path, savename);
+    if (blueprints.empty()) {
+        cout << "No blueprints found. Did you spell the save correctly?" << endl;
+        return 1;
+    }
+    for (const string& name : blueprints) {
         cout << name << endl;
     }
 
