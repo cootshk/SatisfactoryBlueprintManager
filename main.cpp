@@ -20,6 +20,7 @@ const string linux_path = "/home/{user}/.steam/steam/steamapps/compatdata/526870
 const string backup_linux_path = "/run/media/{user}/SteamLibrary/steamapps/compatdata/526870/pfx/drive_c/users/steamuser/AppData/Local/FactoryGame/Saved/SaveGames/blueprints/";
 
 string get_blueprint_path() {
+    // Returns the path to the blueprint folder
     string path;
 #ifdef _WIN32
     char username[UNLEN+1];
@@ -56,6 +57,7 @@ string get_blueprint_path() {
     return path;
 }
 vector<string> get_saves(const string &path) {
+    // Returns a list of saves
     if (path.empty()) {
         return {};
     }
@@ -66,6 +68,7 @@ vector<string> get_saves(const string &path) {
     return saves;
 }
 vector<string> get_save_blueprints(const string &path, const string &savename) {
+    // Returns a list of blueprints for a save
     if (savename.empty()) {
         return {};
     }
@@ -82,6 +85,7 @@ vector<string> get_save_blueprints(const string &path, const string &savename) {
 
 vector<uint> open_blueprint(const string &path, const string &savename, const string &blueprint) {
 //    https://github.com/etothepii4/satisfactory-file-parser/blob/main/src/parser/parser.ts
+// Returns an uint8 array of the blueprint file
     fs::path file_path = path+savename+"/"+blueprint+".sbpcfg";
     if (!fs::exists(file_path)) {
         throw runtime_error("File does not exist");
