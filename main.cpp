@@ -143,9 +143,18 @@ int main() {
     cout << endl;
     cout << "First int:" << endl;
     auto parser = ByteReader(parsed_bp);
-    cout << parser.readInt8() << endl;
+    cout << parser.readInt32() << endl;
     cout << "Description:" << endl;
     cout << parser.readString() << endl;
+    cout << "Icon ID:" << endl;
+    cout << parser.readInt32() << endl;
+    cout << "Color: (RGBA)" << endl; // RGBA
+    cout << parser.readInt32() << " " << parser.readInt32() << " " << parser.readInt32() << " " << parser.readInt32() << endl;
+    parser.position -= 16;
+    cout << "Color: (HEX)" << endl;
+    cout << "#" << parser.readHex() << parser.readHex() << parser.readHex() << parser.readHex() << endl;
+    cout << "Length:" << endl;
+    cout << parser.position << " out of: " << parser.bytestream.size() << endl;
 
     return 0;
 }

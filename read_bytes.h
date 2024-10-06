@@ -35,6 +35,15 @@ public:
         position += 1;
         return value;
     }
+    string readHex() {
+        string value;
+        uint8_t byte = readInt32();
+        // convert uint8 to hex
+        char hex[3];
+        sprintf(hex, "%02X", byte);
+        value += hex;
+        return value;
+    }
     int16_t readInt16() {
         auto value = static_cast<int16_t>(bytestream.at(position) | bytestream.at(position + 1) << 8);
         position += 2;
@@ -76,9 +85,11 @@ public:
         }
         for (int i = 0; i < length; i++) {
             char letter = (readInt8());
-            value += letter;
             if (letter == '\0') {
-                break;
+//                cout << "Null terminator found at position " << i << endl;
+//                break;
+            } else {
+                value += letter;
             }
         }
         return value;
